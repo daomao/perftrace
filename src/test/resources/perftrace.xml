@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<perftraceConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../java/org/googlecode/perftrace/schema/perftrace.xsd">
+	<global>
+		<timeThreshold>1</timeThreshold>
+		<rootMethods>
+			<rootMethod>
+				<methodName>
+					model.Business.main
+				</methodName>
+				<parametersType>
+					<type class="java.lang.String[]" />
+				</parametersType>
+			</rootMethod>
+		</rootMethods>
+	</global>
+
+	<matcher>
+		<nameMatcher>
+			<mappedNames>
+				test*
+			</mappedNames>
+		</nameMatcher>
+		<regexMatcher>
+			<patterns>
+				model.*
+			</patterns>
+		</regexMatcher>
+	</matcher>
+	<patternConf>
+		<pelement>
+			<patattr type="annotation">org.googlecode.perftrace.GProfiled
+			</patattr>
+			<profiled timeThreshold="10" />
+		</pelement>
+	</patternConf>
+</perftraceConfig>

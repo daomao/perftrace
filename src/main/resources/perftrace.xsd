@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<!-- 编辑使用 XMLSpy v2006 U (http://www.altova.com) 由 any (any) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="perftraceConfig">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="patternConf" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="pelement" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="profiled">
+											<xs:complexType>
+												<xs:attribute name="tag" type="xs:string" default="@@USE_METHOD_NAME"/>
+												<xs:attribute name="message" type="xs:string"/>
+												<xs:attribute name="logger" type="xs:string" default="org.googlecode.perftrace.TimingLogger"/>
+												<xs:attribute name="level" type="xs:string" default="INFO"/>
+												<xs:attribute name="logFailureSeparately" type="xs:boolean" default="true"/>
+												<xs:attribute name="timeThreshold" type="xs:long" default="0"/>
+												<xs:attribute name="normalAndSlowSuffixesEnabled" type="xs:boolean" default="true"/>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="patattr" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:string">
+														<xs:attribute name="type" type="PatternType"/>
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="global" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="timeThreshold" type="xs:long" default="0" minOccurs="0"/>
+							<xs:element name="rootMethods" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="rootMethod" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="methodName" type="xs:string"/>
+													<xs:element name="parametersType" minOccurs="0">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="type" maxOccurs="unbounded">
+																	<xs:complexType>
+																		<xs:attribute name="class"/>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="maxWatchChainDepth" type="xs:long" default="2000" minOccurs="0"/>
+							<xs:element name="maxAdditionMsgCount" type="xs:long" default="20" minOccurs="0"/>
+							<xs:element name="logPattern" type="xs:string" default="plain" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="matcher" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="annotationMatcher" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="annotationType" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="regexMatcher" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="patterns" type="xs:string"/>
+										<xs:element name="excludePatterns" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="nameMatcher" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="mappedNames" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="EchoToken" type="xs:string"/>
+			<xs:attribute name="TimeStamp" type="xs:string"/>
+			<xs:attribute name="Version" type="xs:string"/>
+			<xs:attribute name="Target" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="PatternType">
+		<xs:annotation>
+			<xs:documentation>the pattern types</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="annotation"/>
+			<xs:enumeration value="regex"/>
+			<xs:enumeration value="name"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
