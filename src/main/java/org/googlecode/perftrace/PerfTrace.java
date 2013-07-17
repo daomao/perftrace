@@ -55,7 +55,7 @@ public abstract class PerfTrace {
 		return (!getOtaPerfWatchList().isEmpty()) || watch.isRootMethod();
 	}
 
-	public static void addAdditionMsg(String msg) {
+	public void addAdditionMsg(String msg) {
 		getAdditionMsg().add(msg);
 	}
 
@@ -65,6 +65,7 @@ public abstract class PerfTrace {
 			doPerfLog();
 			WATCH_CHAIN.remove();
 			ADDITION_MSG.remove();
+			return;
 		}
 		// 注意，这里需要有防止内存暴涨的保护措施，比如WATCH_CHAIN > 2000时，需要强制刷掉
 

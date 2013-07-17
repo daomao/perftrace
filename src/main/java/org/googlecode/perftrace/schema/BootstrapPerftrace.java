@@ -26,7 +26,7 @@ public class BootstrapPerftrace {
 	private final GlobalSettings globalSettings;
 
 	private final RootMethodMatcher rootMethodMatcher;
-	
+
 	private final Perf4JLogType perf4JLogType;
 
 	private static BootstrapPerftrace INST;
@@ -35,13 +35,14 @@ public class BootstrapPerftrace {
 	 * 
 	 */
 	private BootstrapPerftrace(PerftraceConfig perftraceConfig) {
-this(perftraceConfig,Perf4JLogType.getDefaultPerf4JLogType());
+		this(perftraceConfig, Perf4JLogType.getDefaultPerf4JLogType());
 	}
-	
+
 	/**
 	 * 
 	 */
-	private BootstrapPerftrace(PerftraceConfig perftraceConfig, Perf4JLogType type) {
+	private BootstrapPerftrace(PerftraceConfig perftraceConfig,
+			Perf4JLogType type) {
 		logger.log(Level.INFO, "Init BootstrapPerftrace");
 		this.methodMatcherHandler = MethodMatcherHandlerBuilder
 				.createMethodMatcherHandler(perftraceConfig);
@@ -50,7 +51,8 @@ this(perftraceConfig,Perf4JLogType.getDefaultPerf4JLogType());
 				.getGlobal());
 
 		this.profileInfoMgr = ProfiledInfoManagerBuilder
-				.buildProfileConfManager(perftraceConfig.getPatternConf(),globalSettings);
+				.buildProfileConfManager(perftraceConfig.getPatternConf(),
+						globalSettings);
 
 		this.rootMethodMatcher = RootMethodMatcher.getInstance(perftraceConfig
 				.getGlobal());
@@ -58,6 +60,9 @@ this(perftraceConfig,Perf4JLogType.getDefaultPerf4JLogType());
 	}
 
 	public static Global getGlobal() {
+		if (INST == null) {
+			return new Global();
+		}
 		return INST.getGlobalSettings().getGlobal();
 	}
 
@@ -81,13 +86,15 @@ this(perftraceConfig,Perf4JLogType.getDefaultPerf4JLogType());
 		return perf4JLogType;
 	}
 
-	public static BootstrapPerftrace getInstance(PerftraceConfig perftraceCfg, String type) {
+	public static BootstrapPerftrace getInstance(PerftraceConfig perftraceCfg,
+			String type) {
 		if (INST == null) {
-			INST = new BootstrapPerftrace(perftraceCfg,Perf4JLogType.getPerf4JLogType(type));
+			INST = new BootstrapPerftrace(perftraceCfg, Perf4JLogType
+					.getPerf4JLogType(type));
 		}
 		return INST;
 	}
-	
+
 	public static BootstrapPerftrace getInstance(PerftraceConfig perftraceCfg) {
 		if (INST == null) {
 			INST = new BootstrapPerftrace(perftraceCfg);

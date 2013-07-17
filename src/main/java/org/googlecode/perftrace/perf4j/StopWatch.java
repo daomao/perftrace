@@ -1,6 +1,10 @@
 package org.googlecode.perftrace.perf4j;
 
 import java.io.Serializable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.googlecode.perftrace.util.StringUtils;
 
@@ -84,7 +88,7 @@ public class StopWatch implements Serializable, Cloneable {
 	 *            this StopWatch.
 	 */
 	public StopWatch(String tag, String message) {
-		this(System.currentTimeMillis(), -1L, tag, message);
+		this(SystemTimer.currentTimeMillis(), -1L, tag, message);
 	}
 
 	/**
@@ -198,7 +202,7 @@ public class StopWatch implements Serializable, Cloneable {
 	 * message are not changed.
 	 */
 	public void start() {
-		startTime = System.currentTimeMillis();
+		startTime = SystemTimer.currentTimeMillis();
 		nanoStartTime = System.nanoTime();
 		elapsedTime = -1L;
 	}
@@ -329,6 +333,51 @@ public class StopWatch implements Serializable, Cloneable {
 		String retVal = stop(tag, message);
 		start();
 		return retVal;
+	}
+
+	/**
+	 * 时间缓存
+	 * 
+	 * @author zhongfeng
+	 * 
+	 */
+	public static class SystemTimer {
+		private final static ScheduledExecutorService executor = Executors
+				.newSingleThreadScheduledExecutor(new ThreadFactory() {
+					@Override
+					public Thread newThread(Runnable runnable) {
+						Thread thread = new Thread(runnable, "System Clock");
+						thread.setDaemon(true);
+						return thread;
+					}
+				});
+
+		private static final long tickUnit = Long.parseLong(System.getProperty(
+				"notify.systimer.tick", "20"));
+
+		static {
+			executor.scheduleAtFixedRate(new TimerTicker(), tickUnit, tickUnit,
+					TimeUnit.MILLISECONDS);
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					executor.shutdown();
+				}
+			});
+		}
+
+		private static volatile long time = System.currentTimeMillis();
+
+		private static class TimerTicker implements Runnable {
+			public void run() {
+				time = System.currentTimeMillis();
+			}
+		}
+
+		public static long currentTimeMillis() {
+			return time;
+		}
+
 	}
 
 	// --- Object Methods ---
