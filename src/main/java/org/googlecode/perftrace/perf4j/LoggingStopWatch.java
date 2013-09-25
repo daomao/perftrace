@@ -60,7 +60,7 @@ public class LoggingStopWatch extends StopWatch {
 	private String logRetString;
 
 	private boolean isRootMethod = false;
-	
+
 	private transient PerfTrace perftrace;
 
 	// --- Constructors ---
@@ -70,10 +70,10 @@ public class LoggingStopWatch extends StopWatch {
 	 * the instant of creation.
 	 */
 	public LoggingStopWatch(PerfTrace perftrace) {
-		this(false ,perftrace);
+		this(false, perftrace);
 	}
 
-	public LoggingStopWatch(boolean isRootMethod,PerfTrace perftrace) {
+	public LoggingStopWatch(boolean isRootMethod, PerfTrace perftrace) {
 		super();
 		this.isRootMethod = isRootMethod;
 		this.perftrace = perftrace;
@@ -90,11 +90,12 @@ public class LoggingStopWatch extends StopWatch {
 	 *            unique tag. Note that tags can take a hierarchical format
 	 *            using dot notation.
 	 */
-	public LoggingStopWatch(String tag,PerfTrace perftrace) {
-		this(tag,false,perftrace);
+	public LoggingStopWatch(String tag, PerfTrace perftrace) {
+		this(tag, false, perftrace);
 	}
 
-	public LoggingStopWatch(String tag, boolean isRootMethod,PerfTrace perftrace) {
+	public LoggingStopWatch(String tag, boolean isRootMethod,
+			PerfTrace perftrace) {
 		super(tag);
 		this.isRootMethod = isRootMethod;
 		this.perftrace = perftrace;
@@ -114,7 +115,8 @@ public class LoggingStopWatch extends StopWatch {
 	 *            Additional text to be printed with the logging statement of
 	 *            this LoggingStopWatch.
 	 */
-	public LoggingStopWatch(String tag, String message, boolean isRootMethod,PerfTrace perftrace) {
+	public LoggingStopWatch(String tag, String message, boolean isRootMethod,
+			PerfTrace perftrace) {
 		super(tag, message);
 		this.isRootMethod = isRootMethod;
 		this.perftrace = perftrace;
@@ -137,7 +139,7 @@ public class LoggingStopWatch extends StopWatch {
 	 *            Additional message text
 	 */
 	public LoggingStopWatch(long startTime, long elapsedTime, String tag,
-			String message,boolean isRootMethod,PerfTrace perftrace) {
+			String message, boolean isRootMethod, PerfTrace perftrace) {
 		super(startTime, elapsedTime, tag, message);
 		this.isRootMethod = isRootMethod;
 		this.perftrace = perftrace;
@@ -476,6 +478,16 @@ public class LoggingStopWatch extends StopWatch {
 		}
 	}
 
+	public boolean isOverTimeThreshold() {
+		long elapsedTime = getElapsedTime(); // to allow for subclasses to
+		// override this value
+		long timeThreshold = getTimeThreshold(); // to allow for subclasses to
+		// override this value
+		if (timeThreshold == 0 || elapsedTime >= timeThreshold)
+			return true;
+		return false;
+	}
+
 	// --- Object Methods ---
 
 	public LoggingStopWatch clone() {
@@ -493,11 +505,12 @@ public class LoggingStopWatch extends StopWatch {
 		// Otherwise we default to the backward-compatible behavior: namely:
 		// in most cases timeThreshold will be 0, so just short circuit out as
 		// fast as possible
-		long elapsedTime = getElapsedTime(); // to allow for subclasses to
+		// long elapsedTime = getElapsedTime(); // to allow for subclasses to
 		// override this value
-		long timeThreshold = getTimeThreshold(); // to allow for subclasses to
+		// long timeThreshold = getTimeThreshold(); // to allow for subclasses
+		// to
 		// override this value
-		if (timeThreshold == 0 || elapsedTime >= timeThreshold) {
+		if (isOverTimeThreshold()) {
 			log(stopWatchAsString, exception);
 		}
 	}

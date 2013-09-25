@@ -60,7 +60,7 @@ public abstract class PerfTrace {
 	}
 
 	public void watchStop(LoggingStopWatch watch) {
-		logger.log(Level.FINE,  "Enter Stop:{}", watch.toString());
+		logger.log(Level.FINE, "Enter Stop:{}", watch.toString());
 		if (isStop(watch)) {
 			doPerfLog();
 			WATCH_CHAIN.remove();
@@ -108,9 +108,10 @@ public abstract class PerfTrace {
 		// LogWatchComposite lwc = LogWatchParser.analysis(logString);
 		// LOG.info(lwc.toXMLLogString());
 	}
-	
+
 	/**
-	 * abstract log method 
+	 * abstract log method
+	 * 
 	 * @param logSring
 	 */
 	public abstract void log(String logSring);
@@ -130,8 +131,10 @@ public abstract class PerfTrace {
 	 */
 	private static String buildPerfLogSeg() {
 		List<String> perfLogs = new ArrayList<String>();
-		for (LoggingStopWatch watch : getOtaPerfWatchList())
-			perfLogs.add(watch.getLogRetString());
+		for (LoggingStopWatch watch : getOtaPerfWatchList()) {
+			if (watch.isOverTimeThreshold())
+				perfLogs.add(watch.getLogRetString());
+		}
 		String perfLogSeg = StringUtils.join(perfLogs, PERF_LOG_SEG);
 		return perfLogSeg;
 	}
