@@ -25,4 +25,10 @@ public class Slf4JPerftrace extends PerfTrace {
 	public static PerfTrace getInstance() {
 		return INST;
 	}
+	
+	public static void main(String[] args)
+	{
+		org.googlecode.perftrace.log4j.Logger logger = org.googlecode.perftrace.log4j.Logger.getLogger("123");
+		logger.error("123");
+	}
 }

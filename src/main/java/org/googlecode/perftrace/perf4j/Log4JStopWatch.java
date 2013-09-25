@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.googlecode.perftrace.Log4JPerftrace;
+import org.googlecode.perftrace.log4j.Level;
+import org.googlecode.perftrace.log4j.Logger;
 
 /**
  * This LoggingStopWatch uses a log4j Logger to persist the StopWatch messages.
@@ -20,7 +20,7 @@ import org.googlecode.perftrace.Log4JPerftrace;
  */
 @SuppressWarnings("serial")
 public class Log4JStopWatch extends LoggingStopWatch {
-	private transient Logger logger;
+	private transient static Logger logger =  Logger.getLogger(DEFAULT_LOGGER_NAME);
 	private Level normalPriority;
 	private Level exceptionPriority;
 

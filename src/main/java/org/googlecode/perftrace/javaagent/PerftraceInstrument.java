@@ -4,6 +4,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.googlecode.perftrace.log4j.PropertyConfigurator;
 import org.googlecode.perftrace.schema.BootstrapPerftrace;
 import org.googlecode.perftrace.schema.PerftraceConfig;
 import org.googlecode.perftrace.schema.PerftraceConfigBuilder;
@@ -70,7 +71,7 @@ public class PerftraceInstrument {
 	private static void action(String options, Instrumentation ins,
 			boolean canRetransform) {
 		logger.log(Level.INFO, "options is :{0}", options);
-		//格式为perftrace.xml绝对路径;日志类型
+		//格式为[perftrace.xml绝对路径;日志类型]
 		String[] opTmp = StringUtils.split(options, ";");
 		String perftraceFileName = null;
 		String logType = "jdklog";
@@ -78,7 +79,6 @@ public class PerftraceInstrument {
 			perftraceFileName = opTmp[0];
 			logType = opTmp[1];
 		}
-		
 		PerftraceConfig pfCfg = PerftraceConfigBuilder
 				.getPerftraceConfig(perftraceFileName);
 		BootstrapPerftrace bootstrapPerftrace = BootstrapPerftrace.getInstance(

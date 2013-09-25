@@ -3,7 +3,7 @@
 	<contextName>default</contextName>
 	<jmxConfigurator />
 	
-	<property name="BASE_PERF_LOG_HOME" value="C:" />
+	<property name="BASE_PERF_LOG_HOME" value="C:\log" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<!--
@@ -16,14 +16,12 @@
 			</pattern>
 		</encoder>
 	</appender>
-	
-	<!-- Perf4J logger Appender-->
-	<appender name="PerfDailyAndSizeRollAppender"
+	<appender name="PerfTraceSingleLogRollAppender"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${BASE_PERF_LOG_HOME}/ota_perf.log</file>
+		<file>${BASE_PERF_LOG_HOME}/perftrace_single.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>${BASE_PERF_LOG_HOME}/ota_perf.%d{yyyyMMdd}.%i.log.zip
+			<fileNamePattern>${BASE_PERF_LOG_HOME}/perftrace_single.%d{yyyyMMdd}.%i.log.zip
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -38,14 +36,13 @@
 		</encoder>
 	</appender>
 	
-		
-		<!-- StatLog logger Appender-->
-	<appender name="StatlogDailyAndSizeRollAppender"
+	
+	<appender name="PerftraceNestedLogRollAppender"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${BASE_PERF_LOG_HOME}/ota_stat.log</file>
+		<file>${BASE_PERF_LOG_HOME}/perftrace.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>${BASE_PERF_LOG_HOME}/ota_stat.%d{yyyyMMdd}.%i.log.zip
+			<fileNamePattern>${BASE_PERF_LOG_HOME}/perftrace.%d{yyyyMMdd}.%i.log.zip
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -61,14 +58,12 @@
 	</appender>
 
     <!-- stat Logger -->
-	<logger name="com.travelsky.statlog" level="INFO" additivity="false">
-		<appender-ref ref="StatlogDailyAndSizeRollAppender" />
-		<appender-ref ref="STDOUT" />
+	<logger name="org.googlecode.perftrace" level="INFO" additivity="false">
+		<appender-ref ref="PerftraceNestedLogRollAppender" />
 	</logger>
 
-	<!-- Perf4j Logger -->
-	<logger name="org.perf4j.TimingLogger" level="INFO" additivity="false">
-		<appender-ref ref="PerfDailyAndSizeRollAppender" />
+	<logger name="org.googlecode.perftrace.TimingLogger" level="INFO" additivity="false">
+		<appender-ref ref="PerfTraceSingleLogRollAppender" />
 	</logger>
 
 	<!-- Root Logger -->

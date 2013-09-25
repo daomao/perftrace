@@ -62,8 +62,9 @@ public class PerftraceClassFileTransformer extends AbstractClassFileTransformer 
 					+ "($$); \n"
 					+ "}"
 					+ "finally{"
-					+ "stopWatch.setMessage(java.util.Arrays.deepToString($args)); stopWatch.stop(); "
+					+ " stopWatch.stop(); "
 					+ "}" + "}";
+			//stopWatch.setMessage(java.util.Arrays.deepToString($args));
 		} else {
 			body = "{ \n "
 					+ type
@@ -88,8 +89,9 @@ public class PerftraceClassFileTransformer extends AbstractClassFileTransformer 
 					+ "($$); \n "
 					+ "}"
 					+ "finally{"
-					+ "stopWatch.setMessage(java.util.Arrays.deepToString($args)); stopWatch.stop(); \n "
+					+ " stopWatch.stop(); \n "
 					+ "} \n " + "return result; \n " + "}";
+		//	stopWatch.setMessage(java.util.Arrays.deepToString($args));
 		}
 		return body;
 	}

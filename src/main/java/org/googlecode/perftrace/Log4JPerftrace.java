@@ -1,6 +1,6 @@
 package org.googlecode.perftrace;
 
-import org.apache.log4j.Logger;
+import org.googlecode.perftrace.log4j.Logger;
 
 /**
  * @author zhongfeng

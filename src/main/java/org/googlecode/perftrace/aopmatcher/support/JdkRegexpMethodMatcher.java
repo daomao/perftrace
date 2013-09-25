@@ -52,12 +52,14 @@ public class JdkRegexpMethodMatcher extends AbstractRegexpMethodMatcher {
 
 
 	/**
-	 * Initialize {@link Pattern Patterns} from the supplied {@code String[]}.
+	 * Initialize {@link Pattern Patterns} from the supplied {@code S[]}.
 	 */
 	@Override
 	protected void initPatternRepresentation(String[] patterns) throws PatternSyntaxException {
 		this.compiledPatterns = compilePatterns(patterns);
 	}
+	
+	
 
 	/**
 	 * Initialize exclusion {@link Pattern Patterns} from the supplied {@code String[]}.

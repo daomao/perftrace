@@ -42,7 +42,8 @@ public abstract class AbstractClassFileTransformer implements
 			byte[] classfileBuffer) throws IllegalClassFormatException {
 		if (className != null && className.indexOf("/") != -1) {
 			className = className.replaceAll("/", ".");
-		}
+		}//
+		// ||
 		if (StringUtils.startsWith(className, "org.googlecode.perftrace.")
 				|| StringUtils.startsWith(className, "java.")
 				|| StringUtils.startsWith(className, "javax.")
@@ -56,9 +57,13 @@ public abstract class AbstractClassFileTransformer implements
 			Class<?> clazz, byte[] b) {
 		// add loaderclasspath
 		ClassPool pool = new ClassFactoryClassPool(loader);
+		logger.log(Level.INFO, "RawClassLoader:" + loader.getClass().getName()
+				+ "-ClassName:" + className + "-PoolClassLoader:"
+				+ pool.getClassLoader());
 		CtClass ctClass = null;
 		byte[] ret = null;
 		try {
+
 			ctClass = pool.makeClass(new java.io.ByteArrayInputStream(b));
 			if (ctClass.isInterface() == false) {
 				CtMethod[] methods = ctClass.getDeclaredMethods();

@@ -41,9 +41,14 @@ public class Slf4JStopWatch extends LoggingStopWatch {
 	 */
 	public static final int ERROR_LEVEL = 40000;
 
-	private transient Logger logger;
+	private transient static Logger logger = LoggerFactory
+			.getLogger(DEFAULT_LOGGER_NAME);
 	private int normalPriority;
 	private int exceptionPriority;
+
+	static {
+		logger.info("------------begin------------------");
+	}
 
 	// --- Constructors ---
 

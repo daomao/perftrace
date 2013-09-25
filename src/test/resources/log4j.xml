@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<log4j:configuration debug="true"
+	xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="consoleAppender"
+		class="org.googlecode.perftrace.log4j.ConsoleAppender">
+		<layout class="org.googlecode.perftrace.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%p]%d{yyyy-MM-dd hh:mm:ss}[%t]%.60l - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="RootDailyRollAppender"
+		class="org.googlecode.perftrace.log4j.DailyRollingFileAppender">
+		<param name="File" value="/home/ota/perftrace_debug.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
+		<layout class="org.googlecode.perftrace.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%p]%d{yyyy-MM-dd hh:mm:ss}[%t]%.60l - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="PerftraceNestedLogRollAppender"
+		class="org.googlecode.perftrace.log4j.DailyRollingFileAppender">
+		<param name="File" value="/home/ota/t_perftrace.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
+		<layout class="org.googlecode.perftrace.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+	</appender>
+
+	<appender name="PerfTraceSingleLogRollAppender"
+		class="org.googlecode.perftrace.log4j.DailyRollingFileAppender">
+		<param name="File" value="/home/ota/t_single_perftrace.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
+		<layout class="org.googlecode.perftrace.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+	</appender>
+
+	<!-- stat Logger -->
+	<logger name="org.googlecode.perftrace" level="INFO" additivity="false">
+		<appender-ref ref="PerftraceNestedLogRollAppender" />
+	</logger>
+
+	<logger name="org.googlecode.perftrace.TimingLogger" level="INFO"
+		additivity="false">
+		<appender-ref ref="PerfTraceSingleLogRollAppender" />
+	</logger>
+
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="RootDailyRollAppender" />
+		<appender-ref ref="consoleAppender" />
+	</root>
+
+</log4j:configuration>
