@@ -23,7 +23,7 @@
 		</nameMatcher>
 		<regexMatcher>
 			<patterns>
-				model.Business.*
+				model.*
 			</patterns>
 		</regexMatcher>
 	</matcher>

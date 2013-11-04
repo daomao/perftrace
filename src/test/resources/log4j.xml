@@ -5,7 +5,7 @@
 	<appender name="consoleAppender"
 		class="org.googlecode.perftrace.log4j.ConsoleAppender">
 		<layout class="org.googlecode.perftrace.log4j.PatternLayout">
-			<param name="ConversionPattern" value="[%p]%d{yyyy-MM-dd hh:mm:ss}[%t]%.60l - %m%n" />
+			<param name="ConversionPattern" value="%m%n" />
 		</layout>
 	</appender>
 
@@ -35,16 +35,6 @@
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
 	</appender>
-
-	<!-- stat Logger -->
-	<logger name="org.googlecode.perftrace" level="INFO" additivity="false">
-		<appender-ref ref="PerftraceNestedLogRollAppender" />
-	</logger>
-
-	<logger name="org.googlecode.perftrace.TimingLogger" level="INFO"
-		additivity="false">
-		<appender-ref ref="PerfTraceSingleLogRollAppender" />
-	</logger>
 
 	<root>
 		<level value="INFO" />
