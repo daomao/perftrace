@@ -4,7 +4,7 @@
 	<name>perftrace</name>
 	<groupId>org.googlecode</groupId>
 	<artifactId>perftrace</artifactId>
-	<version>2.4.0</version>
+	<version>3.1.0</version>
 	<distributionManagement>
 		<repository>
 			<id>releases</id>
@@ -19,7 +19,12 @@
 		</snapshotRepository>
 	</distributionManagement>
 	<dependencies>
-
+		<!-- Stat模块使用  -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>14.0-rc1</version>
+		</dependency>
 		<!--
 			<dependency> <groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId> <version>3.17.1-GA</version>
