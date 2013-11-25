@@ -6,7 +6,7 @@ package org.googlecode.threadpool;
  * 
  * @author zhongfeng
  */
-public class TaskQuota  extends Quota{
+public class TaskQuota{
 
 	public enum QuotaPolicy {
 		/**
@@ -19,35 +19,31 @@ public class TaskQuota  extends Quota{
 		LIMIT};
 
 	private final String taskKey;
-	private final QuotaPolicy quotaPolicy;
+	private final Quota reserveQuota;
+	private final Quota elasticQuota;
+	//private final QuotaPolicy quotaPolicy;
 
-	public TaskQuota(String taskKey,int quota) {
-		this(taskKey,quota,QuotaPolicy.LEAVE);
+	public TaskQuota(String taskKey,int reserveQuota) {
+		this(taskKey,reserveQuota,0);
 	}
 
-	public TaskQuota(String taskKey,int quota,QuotaPolicy quotaPolicy) {
-		super(quota);
+	public TaskQuota(String taskKey,int reserveQuota,int elasticQuota) {
 		this.taskKey = taskKey;
-		this.quotaPolicy = quotaPolicy;
+		this.reserveQuota = new Quota(reserveQuota);
+		this.elasticQuota = new Quota(elasticQuota);
+		//this.quotaPolicy = quotaPolicy;
 
+	}
+
+	public Quota getReserveQuota() {
+		return reserveQuota;
+	}
+
+	public Quota getElasticQuota() {
+		return elasticQuota;
 	}
 
 	public String getTaskKey() {
 		return taskKey;
-	}
-	public QuotaPolicy getQuotaPolicy() {
-		return quotaPolicy;
-	}
-
-
-
-	public boolean isLeavePolicy()
-	{
-		return QuotaPolicy.LEAVE.equals(getQuotaPolicy());
-	}
-	
-	public boolean isLimitPolicy()
-	{
-		return QuotaPolicy.LIMIT.equals(getQuotaPolicy());
 	}
 }

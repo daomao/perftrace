@@ -34,7 +34,7 @@ public class JobDispatcher implements Runnable {
 	private Map<String, TaskBufferQueue> jobQueuePool;// 不同的资源分配模型配置key都有自己的队列结构，默认的模型采用default。
 	private Map<String, AtomicInteger> defaultCounterPool;// 用于记录每一个设置了资源分配模型的资源所占用的真实线程数。（包括私有和共有的）
 
-	private TaskQuotaFactory quotaFactory;// 任务阀值
+	private TaskQuotaAllocator quotaFactory;// 任务阀值
 
 	private AtomicInteger defaultCounter;// 默认线程消耗数量，totalcounter-各个私有线程消耗
 	private AtomicInteger totalCounter;// 所有线程消耗数量

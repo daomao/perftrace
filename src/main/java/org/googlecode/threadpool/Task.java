@@ -6,7 +6,7 @@ import java.util.List;
  * @author zhongfeng
  *
  */
-public class Task {
+public abstract class Task implements Runnable{
 	
 	private Runnable runnable;
 	
@@ -48,4 +48,14 @@ public class Task {
 		this.currentUsedQuota = currentUsedQuota;
 	}
 
+	@Override
+	public void run() {
+			try{
+				runnable.run();
+			}
+			finally
+			{
+				
+			}
+	}
 }

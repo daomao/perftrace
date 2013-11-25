@@ -16,7 +16,7 @@ import java.util.Map;
  * @author zhongfeng
  * 
  */
-public class TaskQuotaFactory {
+public class TaskQuotaAllocator {
 
 	private Map<String, TaskQuota> quotaCache = new HashMap<String, TaskQuota>();
 
@@ -30,15 +30,33 @@ public class TaskQuotaFactory {
 			List<TaskQuota> quotaList) {
 		this.maximumPoolSize = maximumPoolSize;
 
-		int totalLeaveQuota = buildLeavePolicyTaskQuota(quotaList);
+		int totalLeaveQuota = buildReservePolicyTaskQuota(quotaList);
 
 		int sharedPoolSize = caculateSharedPoolSize(minAvailableSharedPoolSize,
 				totalLeaveQuota);
 
 		// 构建sharedTaskQuota
 		this.sharedTaskQuota = new Quota(sharedPoolSize);
-		//
-		buildLimitPolicyTaskQuota(quotaList, sharedPoolSize);
+	}
+
+	/**
+	 * @param quotaList
+	 * @return totalLeaveYHQuota 分配出去的独占Quota总量
+	 * 
+	 */
+	private int buildReservePolicyTaskQuota(List<TaskQuota> quotaList) {
+		int totalLeaveQuota = 0;
+		for (TaskQuota taskQuota : quotaList) {
+			totalLeaveQuota += taskQuota.getReserveQuota().getValue();
+			// 校验totalLeaveQuota不能大于maximumPoolSize
+			if (totalLeaveQuota > getMaximumPoolSize())
+				throw new IllegalArgumentException("TotalLeaveQuota: "
+						+ totalLeaveQuota + " is greater than maximumPoolSize:"
+						+ getMaximumPoolSize());
+			quotaCache.put(taskQuota.getTaskKey(), taskQuota);
+
+		}
+		return totalLeaveQuota;
 	}
 
 	/**
@@ -59,78 +77,31 @@ public class TaskQuotaFactory {
 		return this.sharedPoolSize;
 	}
 
-	/**
-	 * @param quotaList
-	 * @return totalLeaveQuota 分配出去的独占Quota总量
-	 * 
-	 */
-	private int buildLeavePolicyTaskQuota(List<TaskQuota> quotaList) {
-		int totalLeaveQuota = 0;
-		for (TaskQuota taskQuota : quotaList) {
-			if (taskQuota.isLeavePolicy()) {
-				totalLeaveQuota += taskQuota.getValue();
-				// 校验totalLeaveQuota不能大于maximumPoolSize
-				if (totalLeaveQuota > getMaximumPoolSize())
-					throw new IllegalArgumentException("TotalLeaveQuota: "
-							+ totalLeaveQuota
-							+ " is greater than maximumPoolSize:"
-							+ getMaximumPoolSize());
-				quotaCache.put(taskQuota.getTaskKey(), taskQuota);
-			}
-		}
-		return totalLeaveQuota;
-	}
-
-	/**
-	 * LIMIT POLICY的 task quota，其值不能大于SharedPoolSize
-	 * 
-	 * @param quotaList
-	 */
-	private void buildLimitPolicyTaskQuota(List<TaskQuota> quotaList,
-			int sharedPoolSize) {
-		for (TaskQuota taskQuota : quotaList) {
-			if (taskQuota.isLimitPolicy()) {
-				if (taskQuota.getValue() > sharedPoolSize) {
-					throw new IllegalArgumentException("TaskQutoa: "
-							+ taskQuota + " greater than SharedPoolSize : "
-							+ sharedPoolSize);
-				}
-				quotaCache.put(taskQuota.getTaskKey(), taskQuota);
-			}
-		}
-	}
-
 	public boolean acquire(Task task) {
 		// 如果quota為null 怎麼處理？
+		boolean flag = false;
 		TaskQuota quota = quotaCache.get(task.getTaskKey());
 		List<Quota> taskCurrrentUsedQuota = new ArrayList<Quota>();
-		if (quota.isLeavePolicy()) {
-			if (quota.acquire()) {
-				taskCurrrentUsedQuota.add(quota);
-				task.setCurrentUsedQuota(taskCurrrentUsedQuota);
-				return true;
-			}
-			if (sharedTaskQuota.acquire()) {
-				taskCurrrentUsedQuota.add(sharedTaskQuota);
-				task.setCurrentUsedQuota(taskCurrrentUsedQuota);
-				return true;
-			}
-		}
-		if (quota.isLimitPolicy()) {
-			boolean limitQuotaAC = quota.acquire();
+		if (quota.getReserveQuota().acquire()) {
+			taskCurrrentUsedQuota.add(quota.getReserveQuota());
+			task.setCurrentUsedQuota(taskCurrrentUsedQuota);
+			flag = true;
+		} else {
+			boolean limitQuotaAC = quota.getElasticQuota().acquire();
 			boolean sharedTaskQuotaAc = sharedTaskQuota.acquire();
 			if (limitQuotaAC && sharedTaskQuotaAc) {
-				taskCurrrentUsedQuota.add(quota);
+				taskCurrrentUsedQuota.add(quota.getElasticQuota());
 				taskCurrrentUsedQuota.add(sharedTaskQuota);
 				task.setCurrentUsedQuota(taskCurrrentUsedQuota);
-				return true;
+				flag = true;
+			} else {
+				if (limitQuotaAC)
+					quota.getElasticQuota().release();
+				if (sharedTaskQuotaAc)
+					sharedTaskQuota.release();
 			}
-			if (limitQuotaAC)
-				quota.release();
-			if (sharedTaskQuotaAc)
-				sharedTaskQuota.release();
 		}
-		return false;
+		return flag;
 	}
 
 	public void release(Task task) {
