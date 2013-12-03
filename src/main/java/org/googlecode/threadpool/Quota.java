@@ -2,22 +2,32 @@ package org.googlecode.threadpool;
 
 import java.util.concurrent.Semaphore;
 
-/** {@link Quota} */
+/**
+ * @author zhongfeng
+ * 
+ */
 public class Quota {
-	private  Semaphore state;
-	private  int value;
+
+	/**
+	 * 计数许可
+	 */
+	private Semaphore state;
+
+	/**
+	 * 初始值
+	 */
+	private int value;
 
 	/**
 	 * 
 	 */
 	public Quota() {
-		
+
 	}
 
 	public Quota(int value) {
 		if (value < 0)
-			throw new IllegalArgumentException(
-					"Quota should not less than 0.");
+			throw new IllegalArgumentException("Quota should not less than 0.");
 		this.value = value;
 		this.state = new Semaphore(value);
 	}
@@ -39,7 +49,6 @@ public class Quota {
 	/**
 	 * 释放一个配额.
 	 * 
-	 * @return false 表示无效的释放, 正常情况下不应出现, 反之为true.
 	 */
 	public void release() {
 		state.release();
@@ -50,5 +59,3 @@ public class Quota {
 	}
 
 }
-
-

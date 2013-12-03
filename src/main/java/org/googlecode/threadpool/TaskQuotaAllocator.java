@@ -1,32 +1,73 @@
 package org.googlecode.threadpool;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import org.googlecode.threadpool.PoolConfig.TaskConfig;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
- * TaskQuota为LIMIT方式时，其quota不能大于sharedPoolSize; 因此构建时必须一次性构建好状态
  * 
- * (1)先构建所有的LEAVE方式的quota，满足条件：所有的LEAVE Quota总和 < maximumPoolSize;
+ * 先构建所有的Reserve方式的quota，满足条件：所有的Reserve Quota总和 < maximumPoolSize;
  * 如果剩余的sharedPoolSize小于默认最小值，则分配失败；
- * 
- * (2)所有为LIMIT的quota，其值不得大于sharedPoolSize;
- * 
+ *  * 
  * @author zhongfeng
  * 
  */
 public class TaskQuotaAllocator {
 
-	private Map<String, TaskQuota> quotaCache = new HashMap<String, TaskQuota>();
+	/**
+	 * 单例模式
+	 */
+	private final static TaskQuotaAllocator INSTANCE = new TaskQuotaAllocator();
 
+	/**
+	 * 
+	 */
+	private LoadingCache<String, TaskQuota> quotaCache = CacheBuilder
+			.newBuilder().build(new CacheLoader<String, TaskQuota>() {
+				@Override
+				public TaskQuota load(String key) throws Exception {
+					//如果没有配置key的quota，则使用默认的设置；无限抢占共用资源
+					TaskConfig taskConfig = PoolConfig.getTaskConfig(key);
+					return new TaskQuota(taskConfig.getTaskKey(), taskConfig
+							.getReserve(), taskConfig.getElastic());
+				}
+			});
+
+	/**
+	 * 共享配额
+	 */
 	private Quota sharedTaskQuota;
 
+	/**
+	 * 线程池总大小
+	 */
 	private int maximumPoolSize;
 
+	/**
+	 * 共享池大小（弹性配额共享）
+	 */
 	private int sharedPoolSize;
 
-	public void init(int maximumPoolSize, int minAvailableSharedPoolSize,
+	/**
+	 * PoolConfig保持了全局的配置，TaskQuotaAllocator构建从PoolConfig开始
+	 */
+	private TaskQuotaAllocator() {
+		List<TaskQuota> quotaList = new ArrayList<TaskQuota>();
+		for (TaskConfig taskCfg : PoolConfig.getAllTaskConfig()) {
+			quotaList.add(new TaskQuota(taskCfg.getTaskKey(), taskCfg
+					.getReserve(), taskCfg.getElastic()));
+		}
+		init(PoolConfig.getMaximumPoolSize(), PoolConfig
+				.getMinAvailableSharedPoolSize(), quotaList);
+	}
+
+	private void init(int maximumPoolSize, int minAvailableSharedPoolSize,
 			List<TaskQuota> quotaList) {
 		this.maximumPoolSize = maximumPoolSize;
 
@@ -77,52 +118,68 @@ public class TaskQuotaAllocator {
 		return this.sharedPoolSize;
 	}
 
-	public boolean acquire(Task task) {
-		// 如果quota為null 怎麼處理？
-		boolean flag = false;
-		TaskQuota quota = quotaCache.get(task.getTaskKey());
+	public boolean acquire(RunnableTask runnableTask) {
+		//不会取到NULL
+		TaskQuota quota = getTaskQuota(runnableTask);
 		List<Quota> taskCurrrentUsedQuota = new ArrayList<Quota>();
+		//优先使用独占资源
 		if (quota.getReserveQuota().acquire()) {
 			taskCurrrentUsedQuota.add(quota.getReserveQuota());
-			task.setCurrentUsedQuota(taskCurrrentUsedQuota);
+			runnableTask.setCurrentUsedQuota(taskCurrrentUsedQuota);
+			runnableTask.setReserve(true);
+			return true;
+		}
+
+		// 独占资源用完后，尝试竞争共享资源
+		boolean limitQuotaAC = quota.getElasticQuota().acquire();
+		if (!limitQuotaAC) {
+			return false;
+		}
+		boolean flag = false;
+		boolean sharedTaskQuotaAc = sharedTaskQuota.acquire();
+		//limitQuotaAC && sharedTaskQuotaAc 同时获取成功 flag = true
+		if (sharedTaskQuotaAc) {
+			taskCurrrentUsedQuota.add(quota.getElasticQuota());
+			taskCurrrentUsedQuota.add(sharedTaskQuota);
+			runnableTask.setCurrentUsedQuota(taskCurrrentUsedQuota);
+			runnableTask.setReserve(false);
 			flag = true;
 		} else {
-			boolean limitQuotaAC = quota.getElasticQuota().acquire();
-			boolean sharedTaskQuotaAc = sharedTaskQuota.acquire();
-			if (limitQuotaAC && sharedTaskQuotaAc) {
-				taskCurrrentUsedQuota.add(quota.getElasticQuota());
-				taskCurrrentUsedQuota.add(sharedTaskQuota);
-				task.setCurrentUsedQuota(taskCurrrentUsedQuota);
-				flag = true;
-			} else {
-				if (limitQuotaAC)
-					quota.getElasticQuota().release();
-				if (sharedTaskQuotaAc)
-					sharedTaskQuota.release();
-			}
+			if (limitQuotaAC)
+				quota.getElasticQuota().release();
 		}
 		return flag;
 	}
 
-	public void release(Task task) {
-		for (Quota quota : task.getCurrentUsedQuota())
+	/**
+	 * @param runnableTask
+	 * @param quota
+	 * @return
+	 */
+	private TaskQuota getTaskQuota(RunnableTask runnableTask ){
+		try {
+			return quotaCache.get(runnableTask.getTaskKey());
+		} catch (ExecutionException e) {
+			//不会发生
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void release(RunnableTask runnableTask) {
+		for (Quota quota : runnableTask.getCurrentUsedQuota())
 			quota.release();
+	}
+
+	public static TaskQuotaAllocator getInstance() {
+		return INSTANCE;
 	}
 
 	public int getMaximumPoolSize() {
 		return maximumPoolSize;
 	}
 
-	public void setMaximumPoolSize(int maximumPoolSize) {
-		this.maximumPoolSize = maximumPoolSize;
-	}
-
 	public int getSharedPoolSize() {
 		return sharedPoolSize;
-	}
-
-	public void setSharedPoolSize(int sharedPoolSize) {
-		this.sharedPoolSize = sharedPoolSize;
 	}
 
 }

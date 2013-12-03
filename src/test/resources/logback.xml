@@ -67,7 +67,7 @@
 	</logger>
 
 	<!-- Root Logger -->
-	<root level="INFO">
+	<root level="DEBUG">
 	<appender-ref ref="StatlogDailyAndSizeRollAppender" />
 		<appender-ref ref="STDOUT" />
 	</root>

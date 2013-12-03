@@ -13,7 +13,7 @@ public class ThreadRenamingRunnable implements Runnable {
         LoggerFactory.getLogger(ThreadRenamingRunnable.class);
 
     private static volatile ThreadNameDeterminer threadNameDeterminer =
-        ThreadNameDeterminer.PROPOSED;
+        ThreadNameDeterminer.P_P;
 
     /**
      * Returns the {@link ThreadNameDeterminer} which overrides the proposed
@@ -107,6 +107,13 @@ public class ThreadRenamingRunnable implements Runnable {
      * Overrides the thread name proposed by {@link ThreadRenamingRunnable}.
      */
     public interface ThreadNameDeterminer {
+    	
+        ThreadNameDeterminer P_P = new ThreadNameDeterminer() {
+            public String determineThreadName(String currentThreadName,
+                    String proposedThreadName) throws Exception {
+                return proposedThreadName + ":" + currentThreadName;
+            }
+        };
 
         /**
          * {@link ThreadNameDeterminer} that accepts the proposed thread name
