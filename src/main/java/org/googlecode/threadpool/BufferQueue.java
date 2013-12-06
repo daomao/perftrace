@@ -11,12 +11,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.googlecode.perftrace.stat.StatMonitor.SystemTimer;
+import org.googlecode.threadpool.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Task 没有资源
+ * Task 没有资源执行，将进入等待队列
+ * 这里有一个优先级的问题需要考虑：如果同一类型的主键具有相同的过期时间，则使用LinkedBlockingQueue
+ * 如果具有不同的过期时间，则需要使用优先级表
  * @author zhongfeng
  * 
  */
@@ -89,11 +91,9 @@ public class BufferQueue {
 	 * @param centralExecutor 核心业务主线程池
 	 * @param taskQuotaAllocator 配额资源管理器
 	 */
-	public void startQueueTaskSubmit(TaskCentralExecutor centralExecutor,
-			TaskQuotaAllocator taskQuotaAllocator) {
+	public void startQueueTaskSubmit(TaskCentralExecutor centralExecutor) {
 		exec
-				.submit(new BufferTaskSubmitter(centralExecutor,
-						taskQuotaAllocator));
+				.submit(new BufferTaskSubmitter(centralExecutor));
 	}
 
 	public void stop() {
@@ -186,37 +186,35 @@ public class BufferQueue {
 
 	private class BufferTaskSubmitter implements Runnable {
 
+		private static final int WAIT_BLOCK_TIME = 5000;
+
 		private TaskCentralExecutor centralExecutor;
 
-		private TaskQuotaAllocator taskQuotaAllocator;
-
-		public BufferTaskSubmitter(TaskCentralExecutor centralExecutor,
-				TaskQuotaAllocator taskQuotaAllocator) {
+		public BufferTaskSubmitter(TaskCentralExecutor centralExecutor) {
 			this.centralExecutor = centralExecutor;
-			this.taskQuotaAllocator = taskQuotaAllocator;
 		}
 
 		public void run() {
 			while (!Thread.currentThread().isInterrupted()) {
 				if (taskBufferQueue.isEmpty()) {
-					blockNoJob(1000);// 如果没有任务就阻塞1秒钟
+					blockNoJob(WAIT_BLOCK_TIME);// 如果没有任务就阻塞1秒钟
 					continue;
 				}
 				RunnableTask task = taskBufferQueue.peek();
 				// 判断是否有超时情况
-				if (task.getTimeout() > 0
-						&& (task.getTimeout() < SystemTimer.currentTimeMillis())) {
+				if (task.isExpire()) {
 					taskBufferQueue.poll();
+					LOG.debug("Task is Expire. Discard it. Task:{}",task);
 					continue;
 				}
 				// 判断是否有资源，并且会先并发减去资源
-				if (taskQuotaAllocator.acquire(task)) {
+				if (centralExecutor.acquireResource(task)) {
 					// 如果有资源，弹出队列，执行任务，计数器递减
 					taskBufferQueue.poll();
 					centralExecutor.runTask(task);
 				} else {
 					LOG.debug("BufferQueue NO Resource: {}",getTaskKey());
-					blockNoResource(1000);// 如果没有资源就阻塞1秒钟
+					blockNoResource(WAIT_BLOCK_TIME);// 如果没有资源就阻塞1秒钟
 				}
 			}// while
 		}// run

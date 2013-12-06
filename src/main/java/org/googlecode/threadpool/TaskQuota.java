@@ -35,4 +35,10 @@ public class TaskQuota{
 	public String getTaskKey() {
 		return taskKey;
 	}
+
+	@Override
+	public String toString() {
+		return "TaskQuota [elasticQuota=" + elasticQuota + ", reserveQuota="
+				+ reserveQuota + ", taskKey=" + taskKey + "]";
+	}
 }

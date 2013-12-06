@@ -1,7 +1,5 @@
 package org.googlecode.threadpool;
 
-import static org.junit.Assert.fail;
-
 import java.util.Date;
 
 import org.googlecode.threadpool.PoolConfig.TaskConfig.TaskConfigBuilder;
@@ -9,21 +7,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author zhongfeng
- * 
- */
-public class BufferQueueTest {
+public class TaskCentralExecutorTest {
 
-	private BufferQueue q;
-
+	private TaskCentralExecutor taskCentralExecutor;
 	@Before
 	public void setUp() throws Exception {
 		PoolConfig poolConfig = new PoolConfig();
 		poolConfig.setMaximumPoolSize(10);
 		poolConfig.addTaskConfig(TaskConfigBuilder.newInstance("Test").reserve(2).elastic(0).build());
-		q = BufferQueue.newInstance("Test", 10);
-		q.startQueueTaskSubmit(TaskCentralExecutor.getInstance(poolConfig));
+		taskCentralExecutor = TaskCentralExecutor.getInstance(poolConfig);
 	}
 
 	@After
@@ -31,53 +23,42 @@ public class BufferQueueTest {
 	}
 
 	@Test
-	public void testStartQueueTaskSubmit() {
-	}
-
-	@Test
-	public void testAddTask() {
-		q.addTask(new RunnableTask(new Runnable() {
+	public void testSubmitTask() {
+		taskCentralExecutor.submitTask(new RunnableTask(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Thread.sleep(1000);
+					System.out.println("run 1");
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				System.out.println("Hello World" + new Date());
 			}
-		}, "Test"));
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		q.addTask(new RunnableTask(new Runnable() {
+		}, "Test", 4980));
+		
+		taskCentralExecutor.submitTask(new RunnableTask(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Thread.sleep(1000);
+					System.out.println("run 2");
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("Hello World" + new Date());
+				System.out.println("Hello World 12" + new Date());
 			}
-		}, "Test", 10));
+		}, "Test", 60000));
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(1000 * 20);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// q.stop();
 	}
-
-	@Test
-	public void testNotifyHasResource() {
-		fail("Not yet implemented");
-	}
+	
+	
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.googlecode.perftrace.stat.StatMonitor.SystemTimer;
+import org.googlecode.threadpool.util.ThreadRenamingRunnable;
 
 /**
  * @author zhongfeng
@@ -12,48 +13,36 @@ import org.googlecode.perftrace.stat.StatMonitor.SystemTimer;
  */
 public class RunnableTask implements Runnable {
 
-	private Runnable runnable;
+	private final Runnable runnable;
 
-	private String taskKey;
+	private final String taskKey;
 
-	private long timeout = -1;
+	private final long timeout;
 
-	private long taskId;
+	private final long taskId;
 
-	private long expireTimeout = -1;
+	private final long expireTimeout;
 
 	private volatile List<Quota> currentUsedQuota;
 
 	private volatile boolean isReserve = true;
 
-	public RunnableTask(Runnable runnable, String taskKey) {
-		this(runnable, taskKey, -1, null);
-	}
 	/**
 	 * @param runnable
 	 * @param taskKey
 	 * @param timeout
-	 * 
 	 */
-	public RunnableTask(Runnable runnable, String taskKey, long timeout) {
-		this(runnable,taskKey,timeout,null);
-	}
-	/**
-	 * @param runnable
-	 * @param taskKey
-	 * @param timeout
-	 * @param taskId
-	 * @param currentUsedQuota
-	 */
-	public RunnableTask(Runnable runnable, String taskKey, long timeout,
-			List<Quota> currentUsedQuota) {
-		this.runnable = new ThreadRenamingRunnable(runnable, taskKey);
-		this.taskKey = taskKey;
-		this.timeout = timeout;
+	public RunnableTask(TaskBuilder builder) {
+		this.runnable = new ThreadRenamingRunnable(builder.runnable,
+				builder.taskKey);
+		this.taskKey = builder.taskKey;
+		this.timeout = builder.timeout;
 		this.taskId = LocalSeqIdGenerator.getGenerator().nextSeqId();
-		this.currentUsedQuota = currentUsedQuota;
-		if (timeout > 0) {
-			this.expireTimeout = SystemTimer.currentTimeMillis() + timeout;
+		if (builder.timeout > 0) {
+			this.expireTimeout = SystemTimer.currentTimeMillis()
+					+ builder.timeout;
+		} else {
+			this.expireTimeout = -1;
 		}
 	}
 
@@ -71,8 +60,41 @@ public class RunnableTask implements Runnable {
 	}
 
 	public boolean isExpire() {
-		return getTimeout() > 0
+		return (getTimeout() > 0)
 				&& (expireTimeout < SystemTimer.currentTimeMillis());
+	}
+
+	public static class TaskBuilder {
+
+		public static final String DEFAULT_TASK_KEY = "-DefaultTaskKey-";
+
+		private final Runnable runnable;
+
+		private String taskKey = DEFAULT_TASK_KEY;
+
+		private long timeout = -1;
+
+		public TaskBuilder(Runnable runnable) {
+			this.runnable = runnable;
+		}
+
+		public TaskBuilder taskKey(String key) {
+			this.taskKey = key;
+			return this;
+		}
+
+		public TaskBuilder timeout(long timeout) {
+			this.timeout = timeout;
+			return this;
+		}
+
+		public RunnableTask build() {
+			return new RunnableTask(this);
+		}
+
+		public static TaskBuilder newInstance(Runnable runnable) {
+			return new TaskBuilder(runnable);
+		}
 	}
 
 	public static class LocalSeqIdGenerator implements Iterable<Long> {
@@ -115,28 +137,28 @@ public class RunnableTask implements Runnable {
 
 	}
 
-	public Runnable getRunnable() {
-		return runnable;
+	public void onSuccess(MessageResult result) {
+
 	}
 
-	public void setRunnable(Runnable runnable) {
-		this.runnable = runnable;
+	public void onFailed(MessageResult result) {
+
+	}
+
+	public long getExpireTimeout() {
+		return expireTimeout;
+	}
+
+	public Runnable getRunnable() {
+		return runnable;
 	}
 
 	public String getTaskKey() {
 		return taskKey;
 	}
 
-	public void setTaskKey(String taskKey) {
-		this.taskKey = taskKey;
-	}
-
 	public long getTimeout() {
 		return timeout;
-	}
-
-	public void setTimeout(long timeout) {
-		this.timeout = timeout;
 	}
 
 	public List<Quota> getCurrentUsedQuota() {
@@ -149,10 +171,6 @@ public class RunnableTask implements Runnable {
 
 	public long getTaskId() {
 		return taskId;
-	}
-
-	public void setTaskId(long taskId) {
-		this.taskId = taskId;
 	}
 
 	public boolean isReserve() {

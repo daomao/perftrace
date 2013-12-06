@@ -58,4 +58,9 @@ public class Quota {
 		return value;
 	}
 
+	@Override
+	public String toString() {
+		return "Quota [state=" + state.availablePermits() + ", value=" + value + "]";
+	}
+
 }
