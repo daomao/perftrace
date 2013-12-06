@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 
 import org.googlecode.threadpool.PoolConfig.TaskConfig.TaskConfigBuilder;
+import org.googlecode.threadpool.RunnableTask.TaskBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class BufferQueueTest {
 
 	@Test
 	public void testAddTask() {
-		q.addTask(new RunnableTask(new Runnable() {
+		q.addTask(TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -47,14 +48,14 @@ public class BufferQueueTest {
 				}
 				System.out.println("Hello World" + new Date());
 			}
-		}, "Test"));
+		}).taskKey("Test").build());
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		q.addTask(new RunnableTask(new Runnable() {
+		q.addTask(TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -65,7 +66,7 @@ public class BufferQueueTest {
 				}
 				System.out.println("Hello World" + new Date());
 			}
-		}, "Test", 10));
+		}).taskKey("Test").timeout(10).build());
 		try {
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {

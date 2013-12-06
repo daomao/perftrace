@@ -4,6 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Date;
 
+import org.googlecode.threadpool.RunnableTask.TaskBuilder;
 import org.googlecode.threadpool.TimeoutMonitor.TimeoutChecker;
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +25,7 @@ public class TimeoutCheckerTest {
 
 	@Test
 	public void testAddTask() {
-		RunnableTask task = new RunnableTask(new Runnable() {
+		RunnableTask task = TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -35,7 +36,7 @@ public class TimeoutCheckerTest {
 				}
 				System.out.println("Hello World" + new Date());
 			}
-		}, "Test" , 5000);
+		}).taskKey("Test").timeout(5000).build();
 		checker.start();
 		TaskCentralExecutor.getInstance(PoolConfig.DEFAULT_CONFIG).execute(checker.addTask(task));
 		try {

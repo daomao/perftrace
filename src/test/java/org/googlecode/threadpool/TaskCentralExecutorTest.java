@@ -3,6 +3,7 @@ package org.googlecode.threadpool;
 import java.util.Date;
 
 import org.googlecode.threadpool.PoolConfig.TaskConfig.TaskConfigBuilder;
+import org.googlecode.threadpool.RunnableTask.TaskBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class TaskCentralExecutorTest {
 
 	@Test
 	public void testSubmitTask() {
-		taskCentralExecutor.submitTask(new RunnableTask(new Runnable() {
+		taskCentralExecutor.submitTask(TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -36,9 +37,9 @@ public class TaskCentralExecutorTest {
 				}
 				System.out.println("Hello World" + new Date());
 			}
-		}, "Test", 4980));
+		}).taskKey("Test").timeout(4980).build());
 		
-		taskCentralExecutor.submitTask(new RunnableTask(new Runnable() {
+		taskCentralExecutor.submitTask(TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -50,7 +51,7 @@ public class TaskCentralExecutorTest {
 				}
 				System.out.println("Hello World 12" + new Date());
 			}
-		}, "Test", 60000));
+		}).taskKey("Test").timeout(6000).build());
 		try {
 			Thread.sleep(1000 * 20);
 		} catch (InterruptedException e) {
