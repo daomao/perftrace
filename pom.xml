@@ -4,7 +4,7 @@
 	<name>perftrace</name>
 	<groupId>org.googlecode</groupId>
 	<artifactId>perftrace</artifactId>
-	<version>3.1.1</version>
+	<version>3.2.0</version>
 	<properties>
 		<project.build.sourceEncoding>
 			UTF-8
