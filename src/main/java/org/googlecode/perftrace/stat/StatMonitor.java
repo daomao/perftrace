@@ -33,7 +33,7 @@ public class StatMonitor {
 	private final static Logger logger = LoggerFactory
 			.getLogger(StatMonitor.class);
 
-	private static final int DEFAULT_NUM = 10;
+	private static final int DEFAULT_NUM = 1;
 
 	private final static Executor LOG_EXEC = Executors
 			.newSingleThreadExecutor();

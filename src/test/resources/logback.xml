@@ -2,9 +2,6 @@
 
 	<contextName>default</contextName>
 	<jmxConfigurator />
-	
-	<property name="BASE_PERF_LOG_HOME" value="C:\log" />
-
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<!--
 			encoders are assigned the type
@@ -16,59 +13,9 @@
 			</pattern>
 		</encoder>
 	</appender>
-	<appender name="PerfTraceSingleLogRollAppender"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${BASE_PERF_LOG_HOME}/perftrace_single.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<!-- rollover daily -->
-			<fileNamePattern>${BASE_PERF_LOG_HOME}/perftrace_single.%d{yyyyMMdd}.%i.log.zip
-			</fileNamePattern>
-			<timeBasedFileNamingAndTriggeringPolicy
-				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-				<!-- or whenever the file size reaches 200MB -->
-				<maxFileSize>200MB</maxFileSize>
-			</timeBasedFileNamingAndTriggeringPolicy>
-			<maxHistory>365</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>%msg%n
-			</pattern>
-		</encoder>
-	</appender>
-	
-	
-	<appender name="PerftraceNestedLogRollAppender"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${BASE_PERF_LOG_HOME}/perftrace.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<!-- rollover daily -->
-			<fileNamePattern>${BASE_PERF_LOG_HOME}/perftrace.%d{yyyyMMdd}.%i.log.zip
-			</fileNamePattern>
-			<timeBasedFileNamingAndTriggeringPolicy
-				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-				<!-- or whenever the file size reaches 200MB -->
-				<maxFileSize>200MB</maxFileSize>
-			</timeBasedFileNamingAndTriggeringPolicy>
-			<maxHistory>365</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>%msg%n
-			</pattern>
-		</encoder>
-	</appender>
-
-    <!-- stat Logger -->
-	<logger name="org.googlecode.perftrace" level="INFO" additivity="false">
-		<appender-ref ref="PerftraceNestedLogRollAppender" />
-	</logger>
-
-	<logger name="org.googlecode.perftrace.TimingLogger" level="INFO" additivity="false">
-		<appender-ref ref="PerfTraceSingleLogRollAppender" />
-	</logger>
 
 	<!-- Root Logger -->
 	<root level="DEBUG">
-	<appender-ref ref="StatlogDailyAndSizeRollAppender" />
 		<appender-ref ref="STDOUT" />
 	</root>
 
