@@ -160,7 +160,7 @@ class RuntimeStat {
 	 */
 	public String getLogString() {
 		return Joiner.on("|").join(
-				new Object[] { getKeyTimeSeg(), currentNum.get(), getTps(),
+				new Object[] { RealIPUtils.REAL_IP,getKeyTimeSeg(), currentNum.get(), getTps(),
 						getRt(), tsSuccess.get(), getRtSuccess(),
 						tsFailed.get(), getRtFailed() });
 	}
