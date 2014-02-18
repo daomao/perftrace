@@ -3,9 +3,6 @@ package org.googlecode.perftrace.stat;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Joiner;
 
 /**
@@ -14,15 +11,7 @@ import com.google.common.base.Joiner;
  */
 class RuntimeStat {
 
-	private final static Logger logger = LoggerFactory
-			.getLogger(RuntimeStat.class);
-
 	private String keyStr;
-
-	/**
-	 * 每1秒交易处理数
-	 */
-	private AtomicLong tps = new AtomicLong(0);
 
 	/**
 	 * 每秒交易失败数
@@ -40,14 +29,14 @@ class RuntimeStat {
 	private AtomicInteger currentNum = new AtomicInteger(0);
 
 	/**
-	 * 请求响应总时间(只统计成功响应)
+	 * 请求成功响应总时间
 	 */
-	private AtomicLong rtTotal = new AtomicLong(0);
+	private AtomicLong rtSuccessTotal = new AtomicLong(0);
 
 	/**
-	 * 平均响应时间（成功响应） rtTotal/tsSuccess;
+	 * 平均响应时间（成功响应） rtSuccessTotal/tsSuccess;
 	 */
-	private AtomicLong rt = new AtomicLong(0);
+	private AtomicLong rtSuccess = new AtomicLong(0);
 
 	/**
 	 * 请求响应总时间(统计失败响应)
@@ -78,13 +67,12 @@ class RuntimeStat {
 
 	public void stop(long elapsedTime, boolean isFault, int num) {
 		currentNum.set(num);
-		tps.incrementAndGet();
 		if (isFault) {
 			tsFailed.incrementAndGet();
 			rtFailedTotal.addAndGet(elapsedTime);
 		} else {
 			tsSuccess.incrementAndGet();
-			rtTotal.addAndGet(elapsedTime);
+			rtSuccessTotal.addAndGet(elapsedTime);
 		}
 	}
 
@@ -96,12 +84,8 @@ class RuntimeStat {
 		this.keyStr = keyStr;
 	}
 
-	public AtomicLong getTps() {
-		return tps;
-	}
-
-	public void setTps(AtomicLong tps) {
-		this.tps = tps;
+	public long getTps() {
+		return tsSuccess.get() + tsFailed.get();
 	}
 
 	public AtomicLong getTsFailed() {
@@ -128,17 +112,12 @@ class RuntimeStat {
 		this.currentNum = currentNum;
 	}
 
-	public AtomicLong getRtTotal() {
-		return rtTotal;
-	}
-
-	public void setRtTotal(AtomicLong rtTotal) {
-		this.rtTotal = rtTotal;
+	public long getRtTotal() {
+		return rtSuccessTotal.get() + rtFailedTotal.get();
 	}
 
 	public long getRt() {
-		long successNum = tsSuccess.get() == 0L ? 1L : tsSuccess.get();
-		return rt.addAndGet(rtTotal.get() / successNum);
+		return getRtTotal() / getTps();
 	}
 
 	public long getRtFailed() {
@@ -146,14 +125,17 @@ class RuntimeStat {
 		return rtFailed.addAndGet(rtFailedTotal.get() / failedNum);
 	}
 
-	public long getSuccessFailedRatio() {
-		long failedNum = tsFailed.get() == 0L ? 1L : tsFailed.get();
-		long successNum = tsSuccess.get() == 0L ? 1L : tsSuccess.get();
-		return failedNum / successNum;
+	public AtomicLong getRtSuccessTotal() {
+		return rtSuccessTotal;
 	}
 
-	public void setRt(AtomicLong rt) {
-		this.rt = rt;
+	public long getRtSuccess() {
+		long successNum = tsSuccess.get() == 0L ? 1L : tsSuccess.get();
+		return rtSuccess.addAndGet(rtSuccessTotal.get() / successNum);
+	}
+
+	public AtomicLong getRtFailedTotal() {
+		return rtFailedTotal;
 	}
 
 	@Override
@@ -182,26 +164,13 @@ class RuntimeStat {
 	}
 
 	/**
-	 * @return keyStr|tps|currentNum|tsSuccess|rt|tsFailed|rtFailed
+	 * @return keyStr|currentNum|tps|rt|tsSuccess|rtSuccess|tsFailed|rtFailedtsFailed|rtFailed
 	 */
 	public String getLogString() {
 		return Joiner.on("|").join(
-				new Object[] { getKeyTimeSeg(), "TPS:" + tps.get(),
-						"T_NUM:" + currentNum.get(),
-						"TPSOK:" + tsSuccess.get(), "RT:" + getRt(),
+				new Object[] { getKeyTimeSeg(), currentNum.get(), getTps(),
+						getRt(), tsSuccess.get(), rtSuccess.get(),
 						tsFailed.get(), getRtFailed() });
-	}
-
-	/**
-	 * 失败成功数大于9或者并发大于0并且成功个数
-	 * 
-	 * @return
-	 */
-	public boolean isBadStat() {
-		if ((getSuccessFailedRatio() > 9L)
-				|| ((currentNum.get() > 0) && (getTsSuccess().get() == 0L)))
-			return true;
-		return false;
 	}
 
 	/**
