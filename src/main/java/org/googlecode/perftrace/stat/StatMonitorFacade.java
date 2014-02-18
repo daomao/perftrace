@@ -63,7 +63,6 @@ public final class StatMonitorFacade {
 		StatMonitor statMgr = getStatManager(serviceName);
 		if (statMgr != null)
 			statMgr.start();
-		startTotal();
 	}
 
 	public final static void stop(String serviceName, long elapsedTime,
@@ -71,7 +70,6 @@ public final class StatMonitorFacade {
 		StatMonitor statMgr = getStatManager(serviceName);
 		if (statMgr != null)
 			statMgr.stop(elapsedTime, isFault);
-		stopTotal(elapsedTime, isFault);
 	}
 
 	/**

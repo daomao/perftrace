@@ -11,11 +11,13 @@ import org.junit.Test;
 public class TaskCentralExecutorTest {
 
 	private TaskCentralExecutor taskCentralExecutor;
+
 	@Before
 	public void setUp() throws Exception {
 		PoolConfig poolConfig = new PoolConfig();
 		poolConfig.setMaximumPoolSize(10);
-		poolConfig.addTaskConfig(TaskConfigBuilder.newInstance("Test").reserve(2).elastic(0).build());
+		poolConfig.addTaskConfig(TaskConfigBuilder.newInstance("Test").reserve(
+				2).elastic(0).build());
 		taskCentralExecutor = TaskCentralExecutor.getInstance(poolConfig);
 	}
 
@@ -38,7 +40,7 @@ public class TaskCentralExecutorTest {
 				System.out.println("Hello World" + new Date());
 			}
 		}).taskKey("Test").timeout(4980).build());
-		
+
 		taskCentralExecutor.submitTask(TaskBuilder.newInstance(new Runnable() {
 			@Override
 			public void run() {
@@ -59,7 +61,5 @@ public class TaskCentralExecutorTest {
 			e.printStackTrace();
 		}
 	}
-	
-	
 
 }

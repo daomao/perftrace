@@ -17,6 +17,9 @@ public class PoolConfig {
 
 	public final static PoolConfig DEFAULT_CONFIG = new PoolConfig(500, 1);
 
+	/**
+	 * TaskConfig 配置缓存
+	 */
 	private LoadingCache<String, TaskConfig> TASK_CONFIG_CACHE = CacheBuilder
 			.newBuilder().build(new CacheLoader<String, TaskConfig>() {
 				@Override
@@ -25,16 +28,22 @@ public class PoolConfig {
 				}
 			});
 
-	private int maximumPoolSize ;
-
-	private int minAvailableSharedPoolSize;
-
+	/**
+	 * 线程数大小
+	 */
+	private int maximumPoolSize;
 
 	/**
+	 * SharedPoolSize最小值，如果比这个值小，初始化会报错
+	 */
+	private int minAvailableSharedPoolSize;
+
+	/**
+	 * 默认构造函数
 	 * 
 	 */
 	public PoolConfig() {
-		this(500,1);
+		this(500, 1);
 	}
 
 	/**
@@ -74,8 +83,8 @@ public class PoolConfig {
 		try {
 			return TASK_CONFIG_CACHE.get(taskKey);
 		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
 		}
-		return null;
 	}
 
 	/**
@@ -84,27 +93,35 @@ public class PoolConfig {
 	 */
 	public static class TaskConfig {
 		/**
-		 * 
+		 * 预留资源
 		 */
 		private final int reserve;
 
 		/**
-		 * 
+		 * 弹性资源
 		 */
 		private final int elastic;
 
 		/**
-		 * 
+		 * 缓冲队列大小
 		 */
 		private final int bufferSize;
 
 		/**
-		 * 
+		 * 任务主键
 		 */
 		private final String taskKey;
-		
+
+		/**
+		 * 任务执行超时时间
+		 */
 		private final long timeout;
 
+		/**
+		 * 建造者模式构建
+		 * 
+		 * @param builder
+		 */
 		private TaskConfig(TaskConfigBuilder builder) {
 			this.reserve = builder.reserve;
 			this.elastic = builder.elastic;
@@ -121,18 +138,14 @@ public class PoolConfig {
 			return elastic;
 		}
 
-
 		public int getBufferSize() {
 			return bufferSize;
 		}
-
 
 		public String getTaskKey() {
 			return taskKey;
 		}
 
-
-		
 		public long getTimeout() {
 			return timeout;
 		}
@@ -144,8 +157,7 @@ public class PoolConfig {
 					+ ", timeout=" + timeout + "]";
 		}
 
-		public static class TaskConfigBuilder
-		{
+		public static class TaskConfigBuilder {
 			/**
 			 * 
 			 */
@@ -167,7 +179,7 @@ public class PoolConfig {
 			 * 
 			 */
 			private int bufferSize = DEFAULT_BUFFER_SIZE;
-			
+
 			private long timeout = -1L;
 
 			/**
@@ -176,35 +188,32 @@ public class PoolConfig {
 			public TaskConfigBuilder(String taskKey) {
 				this.taskKey = taskKey;
 			}
-			
-			public TaskConfigBuilder reserve(int reserve)
-			{
+
+			public TaskConfigBuilder reserve(int reserve) {
 				this.reserve = reserve;
 				return this;
 			}
-			
-			public TaskConfigBuilder elastic(int elastic)
-			{
+
+			public TaskConfigBuilder elastic(int elastic) {
 				this.elastic = elastic;
 				return this;
 			}
-			public TaskConfigBuilder bufferSize(int bufferSize)
-			{
+
+			public TaskConfigBuilder bufferSize(int bufferSize) {
 				this.bufferSize = bufferSize;
 				return this;
 			}
-			
-			public TaskConfigBuilder timeout(long timeout)
-			{
+
+			public TaskConfigBuilder timeout(long timeout) {
 				this.timeout = timeout;
 				return this;
 			}
-			
-			public static TaskConfigBuilder newInstance(String taskKey)
-			{
+
+			public static TaskConfigBuilder newInstance(String taskKey) {
 				return new TaskConfigBuilder(taskKey);
 			}
-			public TaskConfig build(){
+
+			public TaskConfig build() {
 				return new TaskConfig(this);
 			}
 		}

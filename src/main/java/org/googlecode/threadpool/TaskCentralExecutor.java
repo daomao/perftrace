@@ -38,7 +38,7 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 	/**
 	 * 
 	 */
-	private final CopyOnWriteArrayList<BufferQueue> bufferQueueList;
+	private final CopyOnWriteArrayList<BufferQueue> bufferQueueMirror;
 
 	private final TaskQuotaAllocator taskQuotaAllocator;
 
@@ -56,16 +56,16 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
 		this.poolConfig = poolConfig;
 		this.taskQuotaAllocator = TaskQuotaAllocator.getInstance(poolConfig);
-		this.bufferQueueList = new CopyOnWriteArrayList<BufferQueue>();
+		this.bufferQueueMirror = new CopyOnWriteArrayList<BufferQueue>();
 		this.bufferQueueRepo = initBufferQueueCache(poolConfig,
-				this.bufferQueueList);
+				this.bufferQueueMirror);
 	}
 
 	private LoadingCache<String, BufferQueue> initBufferQueueCache(
 			PoolConfig poolConfig,
 			CopyOnWriteArrayList<BufferQueue> bufferQueueList) {
 		return CacheBuilder.newBuilder().build(
-				new BufferQueueCacheLoader(poolConfig, bufferQueueList,this));
+				new BufferQueueCacheLoader(poolConfig, bufferQueueList, this));
 	}
 
 	@Override
@@ -159,7 +159,11 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 	}
 
 	public boolean putQueue(RunnableTask task) {
-		return getTaskQueue(task).addTask(task);
+		boolean flag = getTaskQueue(task).addTask(task);
+		if (!flag) {
+			LOG.warn("Q is full. Discard");
+		}
+		return flag;
 	}
 
 	public boolean hasWaitTask(RunnableTask task) {
@@ -173,8 +177,8 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 				@Override
 				public void run() {
 					// 需要改进，有一点性能问题
-					Collections.shuffle(bufferQueueList);
-					for (BufferQueue taskQueue : bufferQueueList)
+					Collections.shuffle(bufferQueueMirror);
+					for (BufferQueue taskQueue : bufferQueueMirror)
 						taskQueue.notifyHasResource();
 				}
 			});
@@ -206,8 +210,8 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 		return timeoutMonitor;
 	}
 
-	public CopyOnWriteArrayList<BufferQueue> getBufferQueueList() {
-		return bufferQueueList;
+	public CopyOnWriteArrayList<BufferQueue> getBufferQueueMirror() {
+		return bufferQueueMirror;
 	}
 
 	public TaskQuotaAllocator getTaskQuotaAllocator() {
@@ -230,17 +234,17 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 	public final static class BufferQueueCacheLoader extends
 			CacheLoader<String, BufferQueue> {
 		private PoolConfig poolConfig;
-		private CopyOnWriteArrayList<BufferQueue> bufferQueueList;
+		private CopyOnWriteArrayList<BufferQueue> bufferQueueMirror;
 		private TaskCentralExecutor centralExecutor;
 
 		/**
 		 * @param poolConfig
 		 */
 		public BufferQueueCacheLoader(PoolConfig poolConfig,
-				CopyOnWriteArrayList<BufferQueue> bufferQueueList,
+				CopyOnWriteArrayList<BufferQueue> bufferQueueMirror,
 				TaskCentralExecutor centralExecutor) {
 			this.poolConfig = poolConfig;
-			this.bufferQueueList = bufferQueueList;
+			this.bufferQueueMirror = bufferQueueMirror;
 			this.centralExecutor = centralExecutor;
 		}
 
@@ -248,7 +252,7 @@ public class TaskCentralExecutor extends ThreadPoolExecutor {
 		public BufferQueue load(String key) throws Exception {
 			BufferQueue queue = BufferQueue.newInstance(key, poolConfig
 					.getTaskConfig(key).getBufferSize());
-			bufferQueueList.add(queue);
+			bufferQueueMirror.add(queue);
 			queue.startQueueTaskSubmit(centralExecutor);
 			return queue;
 		}

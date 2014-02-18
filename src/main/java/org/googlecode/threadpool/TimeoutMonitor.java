@@ -26,23 +26,18 @@ public class TimeoutMonitor {
 	private final static Logger LOG = LoggerFactory
 			.getLogger(TimeoutMonitor.class);
 
-	private final LoadingCache<String, TimeoutChecker> timeoutCheckerCache;
+	private final LoadingCache<String, TimeoutChecker> timeoutCheckerCache = CacheBuilder
+			.newBuilder().build(new CacheLoader<String, TimeoutChecker>() {
+				@Override
+				public TimeoutChecker load(String key) throws Exception {
+					LOG.debug("Create TimeoutChecker. {} ", key);
+					TimeoutChecker checker = TimeoutChecker.newInstance(key);
+					checker.start();
+					return checker;
+				}
+			});;
 
 	private TimeoutMonitor() {
-		this.timeoutCheckerCache = initTimeoutCheckerCache();
-	}
-
-	private LoadingCache<String, TimeoutChecker> initTimeoutCheckerCache() {
-		CacheLoader<String, TimeoutChecker> runStatsLoader = new CacheLoader<String, TimeoutChecker>() {
-			@Override
-			public TimeoutChecker load(String key) throws Exception {
-				LOG.debug("Create TimeoutChecker. {} ", key);
-				TimeoutChecker checker = TimeoutChecker.newInstance(key);
-				checker.start();
-				return checker;
-			}
-		};
-		return CacheBuilder.newBuilder().build(runStatsLoader);
 	}
 
 	public FutureTaskDelay addTaskTimeoutMonitor(RunnableTask task) {

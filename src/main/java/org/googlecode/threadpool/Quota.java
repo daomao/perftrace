@@ -22,7 +22,7 @@ public class Quota {
 	 * 
 	 */
 	public Quota() {
-
+		this(0);
 	}
 
 	public Quota(int value) {

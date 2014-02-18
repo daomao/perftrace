@@ -26,6 +26,7 @@ class TaskQuotaAllocator {
 			.getLogger(TaskQuotaAllocator.class);
 
 	private static TaskQuotaAllocator INSTANCE;
+
 	/**
 	 * 
 	 */
@@ -42,46 +43,26 @@ class TaskQuotaAllocator {
 	private int maximumPoolSize;
 
 	/**
-	 * 共享池大小（弹性配额共享）
-	 */
-	private int sharedPoolSize;
-
-	/**
 	 * PoolConfig保持了全局的配置，TaskQuotaAllocator构建从PoolConfig开始
 	 */
 	private TaskQuotaAllocator(PoolConfig poolConfig) {
 		this.quotaCache = CacheBuilder.newBuilder().build(
 				new TaskQuotaCacheLoader(poolConfig));
-		List<TaskQuota> quotaList = new ArrayList<TaskQuota>();
-		for (TaskConfig taskCfg : poolConfig.getAllTaskConfig()) {
-			quotaList.add(new TaskQuota(taskCfg.getTaskKey(), taskCfg
-					.getReserve(), taskCfg.getElastic()));
-		}
-		init(poolConfig.getMaximumPoolSize(), poolConfig
-				.getMinAvailableSharedPoolSize(), quotaList);
-	}
-
-	private void init(int maximumPoolSize, int minAvailableSharedPoolSize,
-			List<TaskQuota> quotaList) {
-		this.maximumPoolSize = maximumPoolSize;
-
-		int totalLeaveQuota = buildReservePolicyTaskQuota(quotaList);
-
-		int sharedPoolSize = caculateSharedPoolSize(minAvailableSharedPoolSize,
-				totalLeaveQuota);
-
+		this.maximumPoolSize = poolConfig.getMaximumPoolSize();
 		// 构建sharedTaskQuota
-		this.sharedTaskQuota = new Quota(sharedPoolSize);
+		this.sharedTaskQuota = buildSharedTaskQuota(poolConfig);
 	}
 
 	/**
-	 * @param quotaList
+	 * 
 	 * @return totalLeaveYHQuota 分配出去的独占Quota总量
 	 * 
 	 */
-	private int buildReservePolicyTaskQuota(List<TaskQuota> quotaList) {
+	private int buildReservePolicyTaskQuota(PoolConfig poolConfig) {
 		int totalLeaveQuota = 0;
-		for (TaskQuota taskQuota : quotaList) {
+		for (TaskConfig taskCfg : poolConfig.getAllTaskConfig()) {
+			TaskQuota taskQuota = new TaskQuota(taskCfg.getTaskKey(), taskCfg
+					.getReserve(), taskCfg.getElastic());
 			totalLeaveQuota += taskQuota.getReserveQuota().getValue();
 			// 校验totalLeaveQuota不能大于maximumPoolSize
 			if (totalLeaveQuota > getMaximumPoolSize())
@@ -94,22 +75,21 @@ class TaskQuotaAllocator {
 		return totalLeaveQuota;
 	}
 
-	/**
-	 * @param minAvailableSharedPoolSize
-	 * @param totalLeaveQuota
-	 */
-	private int caculateSharedPoolSize(int minAvailableSharedPoolSize,
-			int totalLeaveQuota) {
+
+	private Quota buildSharedTaskQuota(PoolConfig poolConfig) {
+		int totalLeaveQuota = buildReservePolicyTaskQuota(poolConfig);
+
 		// sharedPoolSize大小等于maximumPoolSize减去所有leave模式占用的
-		this.sharedPoolSize = (getMaximumPoolSize() - totalLeaveQuota);
+		int sharedPoolSize = (poolConfig.getMaximumPoolSize() - totalLeaveQuota);
 
 		// 如果公用池小于minAvailableSharedPoolSize，初始化报错
-		if (getSharedPoolSize() < minAvailableSharedPoolSize)
+		if (sharedPoolSize < poolConfig.getMinAvailableSharedPoolSize())
 			throw new IllegalArgumentException("Current SharedPoolSize is: "
-					+ getSharedPoolSize()
+					+ sharedPoolSize
 					+ " less than minAvailableSharedPoolSize : "
-					+ minAvailableSharedPoolSize);
-		return this.sharedPoolSize;
+					+ poolConfig.getMinAvailableSharedPoolSize());
+
+		return new Quota(sharedPoolSize);
 	}
 
 	public boolean acquire(RunnableTask runnableTask) {
@@ -185,10 +165,6 @@ class TaskQuotaAllocator {
 
 	public int getMaximumPoolSize() {
 		return maximumPoolSize;
-	}
-
-	public int getSharedPoolSize() {
-		return sharedPoolSize;
 	}
 
 	public final static class TaskQuotaCacheLoader extends

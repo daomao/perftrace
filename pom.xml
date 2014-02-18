@@ -4,12 +4,25 @@
 	<name>perftrace</name>
 	<groupId>org.googlecode</groupId>
 	<artifactId>perftrace</artifactId>
-	<version>3.1.0</version>
+	<version>3.1.1</version>
 	<properties>
 		<project.build.sourceEncoding>
 			UTF-8
         </project.build.sourceEncoding>
 	</properties>
+		<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Team Nexus Release Repository</name>
+			<url>http://172.22.12.200:8081/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Team Nexus Snapshot Repository</name>
+			<url>http://172.22.12.200:8081/nexus/content/repositories/snapshots/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>javax.jms</groupId>
